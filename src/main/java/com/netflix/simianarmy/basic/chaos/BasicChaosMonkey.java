@@ -118,7 +118,7 @@ public class BasicChaosMonkey extends ChaosMonkey {
                         if (isMaxTerminationCountExceeded(group)) {
                             break;
                         }
-                        ChaosType chaosType = pickChaosType(context().cloudClient(), inst);
+                        ChaosType chaosType = pickChaosType(context().cloudClient(), group, inst);
                         if (chaosType == null) {
                             // This is surprising ... normally we can always just terminate it
                             LOGGER.warn("No chaos type was applicable to the instance: {}", inst);
@@ -130,11 +130,11 @@ public class BasicChaosMonkey extends ChaosMonkey {
             }
     }
 
-    private ChaosType pickChaosType(CloudClient cloudClient, String instanceId) {
+    private ChaosType pickChaosType(CloudClient cloudClient, InstanceGroup group, String instanceId) {
         Random random = new Random();
 
         SshConfig sshConfig = new SshConfig(cfg);
-        ChaosInstance instance = new ChaosInstance(cloudClient, instanceId, sshConfig);
+        ChaosInstance instance = new ChaosInstance(cloudClient, instanceId, sshConfig, group);
 
         List<ChaosType> applicable = Lists.newArrayList();
         for (ChaosType chaosType : allChaosTypes) {
@@ -373,7 +373,7 @@ public class BasicChaosMonkey extends ChaosMonkey {
                 Event evt = recordTermination(group, inst, chaosType);
                 sendTerminationNotification(group, inst, chaosType);
                 SshConfig sshConfig = new SshConfig(cfg);
-                ChaosInstance chaosInstance = new ChaosInstance(context().cloudClient(), inst, sshConfig);
+                ChaosInstance chaosInstance = new ChaosInstance(context().cloudClient(), inst, sshConfig, group);
                 chaosType.apply(chaosInstance);
                 LOGGER.info("Terminated {} from group {} [{}] with {}",
                         new Object[]{inst, group.name(), group.type(), chaosType.getKey() });

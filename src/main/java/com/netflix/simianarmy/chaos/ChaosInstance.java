@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.netflix.simianarmy.CloudClient;
+import com.netflix.simianarmy.chaos.ChaosCrawler.InstanceGroup;
 
 /**
  * Wrapper around an instance on which we are going to cause chaos.
@@ -34,6 +35,7 @@ public class ChaosInstance {
     private final CloudClient cloudClient;
     private final String instanceId;
     private final SshConfig sshConfig;
+    private final InstanceGroup instanceGroup;
 
     /**
      * Constructor.
@@ -45,10 +47,11 @@ public class ChaosInstance {
      * @param sshConfig
      *            SSH configuration to access instance
      */
-    public ChaosInstance(CloudClient cloudClient, String instanceId, SshConfig sshConfig) {
+    public ChaosInstance(CloudClient cloudClient, String instanceId, SshConfig sshConfig, InstanceGroup instanceGroup) {
         this.cloudClient = cloudClient;
         this.instanceId = instanceId;
         this.sshConfig = sshConfig;
+        this.instanceGroup = instanceGroup;
     }
 
     /**
@@ -78,6 +81,15 @@ public class ChaosInstance {
         return instanceId;
     }
 
+    /**
+     * Returns the instance group to which the instance belongs.
+     *
+     * @return instance group
+     */
+    public InstanceGroup getInstanceGroup() {
+        return instanceGroup;
+    }
+    
     /**
      * Memoize canConnectSsh function.
      */

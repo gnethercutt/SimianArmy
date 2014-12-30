@@ -61,6 +61,10 @@ import com.amazonaws.services.ec2.model.Snapshot;
 import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.Volume;
+import com.amazonaws.services.elasticache.AmazonElastiCacheClient;
+import com.amazonaws.services.elasticache.model.CacheCluster;
+import com.amazonaws.services.elasticache.model.DescribeCacheClustersRequest;
+import com.amazonaws.services.elasticache.model.DescribeCacheClustersResult;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancerAttributesRequest;
 import com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancerAttributesResult;
@@ -246,6 +250,22 @@ public class AWSClient implements CloudClient {
         return client;
     }
 
+    /**
+     * Amazon ElastiCache client. Abstracted to aid testing.
+     *
+     * @return the Amazon ElastiCache client
+     */
+    protected AmazonElastiCacheClient elastiCacheClient() {
+        AmazonElastiCacheClient client;
+        if (awsCredentialsProvider == null) {
+            client = new AmazonElastiCacheClient();
+        } else {
+            client = new AmazonElastiCacheClient(awsCredentialsProvider);
+        }
+        client.setEndpoint("elasticache." + region + ".amazonaws.com");
+        return client;
+    }
+    
     /**
      * Describe auto scaling groups.
      *
@@ -826,5 +846,20 @@ public class AWSClient implements CloudClient {
     @Override
     public boolean canChangeInstanceSecurityGroups(String instanceId) {
         return null != getVpcId(instanceId);
+    }
+
+    public List<CacheCluster> describeElastiCacheClusters() {
+        List<CacheCluster> clusters = new LinkedList<>();
+        
+        DescribeCacheClustersRequest dccRequest = new DescribeCacheClustersRequest();
+        dccRequest.setShowCacheNodeInfo(true);
+
+        AmazonElastiCacheClient elastiCacheClient = elastiCacheClient();
+        DescribeCacheClustersResult result = elastiCacheClient.describeCacheClusters(dccRequest);
+        clusters.addAll(result.getCacheClusters());
+
+        LOGGER.info(String.format("Got %d elasticache clusters.", clusters.size()));
+        return clusters;
+        
     }
 }
